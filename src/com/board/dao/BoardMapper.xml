@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper   
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+
+<mapper namespace="BoardDao">  
+
+	<select id="boardList" parameterType="map" resultType="BoardVO">
+        SELECT SEQ,NAME,TITLE,CONTENT,PASS,HIT,REGDATE FROM (SELECT A.*, ROWNUM RNUM FROM (SELECT * FROM BOARD
+		<where>
+			<if test="keyWord !='' and keyField == 'title'">
+				title like '%' ||#{keyWord}||'%'
+			</if>
+			<if test="keyWord !='' and keyField == 'name'">
+				name like '%' ||#{keyWord}||'%'
+			</if>
+			<if test="keyWord !='' and keyField == 'content'">
+				content like '%' ||#{keyWord}||'%'
+			</if>
+			<if test="keyWord !='' and keyField == 'all'">
+				content like '%' ||#{keyWord}||'%' or
+				title like '%' ||#{keyWord}||'%' or
+				name like '%' ||#{keyWord}||'%' or
+				oriupload like '%' ||#{keyWord}||'%'
+			</if>
+		</where>
+			ORDER BY ref DESC,INDENT ASC,STEP DESC)A)
+		<![CDATA[
+		WHERE RNUM >= #{start} AND RNUM <= #{end}
+		]]>		
+	</select>
+	
+	<select id="boardCount" parameterType="map" resultType="Integer">
+		SELECT COUNT(*) FROM BOARD
+	</select>
+	
+	<insert id="write" parameterType="map">
+		insert into board (seq,title,name,pass,content,hit,regdate,upload,oriupload,ref,indent,step) values (board_seq.nextval,#{title},#{name},#{pass},#{content},0,sysdate,#{upload, jdbcType=VARCHAR},#{oriupload, jdbcType=VARCHAR},board_seq.currval,0,0)
+	</insert>
+	
+	<select id="detail" parameterType="int" resultType="BoardVO">
+		select * from board where seq=#{value}
+	</select>
+	
+	<update id="cnt" parameterType="int">
+		update board set hit=hit+1 where seq=#{value}
+	</update>
+	
+	<update id="update" parameterType="map">
+		update board set title=#{title},name=#{name},content=#{content},upload=#{upload,jdbcType=VARCHAR},oriupload=#{oriupload,jdbcType=VARCHAR} where seq=#{seq}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		delete from board where seq=#{seq} 
+	</delete>
+	
+	<update id="updatefile" parameterType="map">
+		update board set upload=#{upload,jdbcType=VARCHAR},oriupload=#{oriupload,jdbcType=VARCHAR} where seq=#{seq}
+	</update>
+	
+	<insert id="repwri" parameterType="map">
+		insert into board (seq,title,name,pass,content,hit,regdate,upload,oriupload,ref,indent,step) values (board_seq.nextval,#{title},#{name},#{pass},#{content},0,sysdate,#{upload, jdbcType=VARCHAR},#{oriupload, jdbcType=VARCHAR},#{ref},#{indent}+1,#{step}+1)
+	</insert>
+	
+	<update id="updaterep" parameterType="map">
+		update board set indent=indent+1 where ref=#{ref} and indent>#{indent}
+	</update>
+	
+	<update id="updatestep" parameterType="map">
+		update board set step=step+1 where indent=#{indent} and step>#{step}
+	</update>
+</mapper>
+
+
+
+
+
+
+
